@@ -53,6 +53,10 @@ def create_component_query(component):
         return create_gpu_query(component)
     elif component['type'] == 'NIC':
         return create_nic_query(component)
+    elif component['type'] == 'WFA':
+        return create_wfa_query(component)
+    elif component['type'] == 'CBL':
+        return create_cables_query(component)
 
 def create_cpu_query(component):
     uid = component['UID']
@@ -125,6 +129,34 @@ def create_nic_query(component):
     else:
         query = 'INSERT INTO nic (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
     return query
+
+
+def create_wfa_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    cost = component['cost']
+    gpl = component['gpl']
+    if type(power) == int:
+        query = 'INSERT INTO wifi_adapter (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, power, cost, gpl)
+    else:
+        query = 'INSERT INTO wifi_adapter (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
+    return query
+
+
+def create_cables_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    cost = component['cost']
+    gpl = component['gpl']
+    type_id = component['type_id']
+    if type(power) == int:
+        query = 'INSERT INTO cables (uid, name, power, cost, gpl, type_id) VALUES (\'{}\', \'{}\', {}, {}, {}, {});'.format(uid, name, power, cost, gpl, type_id)
+    else:
+        query = 'INSERT INTO cables (uid, name, cost, gpl, type_id) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, cost, gpl, type_id)
+    return query
+
 
 def add_commodity_to_db(component):
     for plat in component['valid_platform']:

@@ -60,10 +60,14 @@ def create_component(component):
     elif res['type'] == 'NIC':
         res['table'] = 'nic'
         res = create_nic(res)
+    elif res['type'] == 'WFA':
+        res['table'] = 'wifi_adapter'
+        res = create_wfa(res)
+    elif res['type'] == 'CBL':
+        res['table'] = 'cables'
+        res = create_cable(res)
     else:
         return None
-    # elif res['type'] == 'WFA':
-    #     res.update({create_cpu()})
     # elif res['type'] == 'BTA':
     #     res.update({create_cpu()})
     # elif res['type'] == 'CMA':
@@ -230,6 +234,31 @@ def get_nic_slot(name):
         return 1
     else:
         return False
+
+
+def create_wfa(res):
+    res['cost'] = 5
+    res['gpl'] = 10
+    return res
+
+def create_cable(res):
+    res['cost'] = 3
+    res['gpl'] = 8
+    res['type_id'] = get_cable_type(res['name'])
+    return res
+
+def get_cable_type(name):
+    if 'HDminiSAS' in name:
+        return 1
+    elif 'DAC' in name:
+        return 2
+    elif 'AOC' in name:
+        return 3
+    elif'OCuLink' in name:
+        return 4
+    else:
+        return 0
+
 
 def create_commodity(component, row, axe):
     valid_plats = []
