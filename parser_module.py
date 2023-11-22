@@ -39,10 +39,12 @@ def parse_pc_validation():
 
 
 def create_component(component):
+
     res = {'type': get_uid_type(component)}
     res['UID'] = get_uid(component)
     res['name'] = get_name(component)
     res['power'] = get_power(component)
+
     if res['type'] == 'CPU':
         res['table'] = 'cpu'
         res = create_cpu(res)
@@ -55,13 +57,14 @@ def create_component(component):
     elif res['type'] == 'VGA':
         res['table'] = 'gpu'
         res = create_vga(res)
+    elif res['type'] == 'NIC':
+        res['table'] = 'nic'
+        res = create_nic(res)
     else:
         return None
     # elif res['type'] == 'WFA':
     #     res.update({create_cpu()})
     # elif res['type'] == 'BTA':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'NIC':
     #     res.update({create_cpu()})
     # elif res['type'] == 'CMA':
     #     res.update({create_cpu()})
@@ -208,6 +211,25 @@ def create_vga(res):
     res['gpl'] = 600
     res['slot_id'] = 3
     return res
+
+def create_nic(res):
+    res['cost'] = 60
+    res['gpl'] = 200
+    if get_nic_slot(res['name']):
+        res['slot_id'] = get_nic_slot(res['name'])
+    else:
+        res['slot_id'] = 0
+    return res
+
+def get_nic_slot(name):
+    if '16' in name:
+        return 3
+    elif '8' in name:
+        return 2
+    elif '4' in name:
+        return 1
+    else:
+        return False
 
 def create_commodity(component, row, axe):
     valid_plats = []

@@ -51,6 +51,8 @@ def create_component_query(component):
         return create_drive_query(component)
     elif component['type'] == 'VGA':
         return create_gpu_query(component)
+    elif component['type'] == 'NIC':
+        return create_nic_query(component)
 
 def create_cpu_query(component):
     uid = component['UID']
@@ -107,6 +109,21 @@ def create_gpu_query(component):
         query = 'INSERT INTO gpu (uid, name, power, cost, gpl, slot_id) VALUES (\'{}\', \'{}\', {}, {}, {}, {});'.format(uid, name, power, cost, gpl, slot_id)
     else:
         query = 'INSERT INTO gpu (uid, name, cost, gpl, slot_id) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, cost, gpl, slot_id)
+    return query
+
+def create_nic_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    cost = component['cost']
+    gpl = component['gpl']
+    slot_id = component['slot_id']
+    if type(power) == int and slot_id != 0:
+        query = 'INSERT INTO nic (uid, name, power, cost, gpl, slot_id) VALUES (\'{}\', \'{}\', {}, {}, {}, {});'.format(uid, name, power, cost, gpl, slot_id)
+    elif type(power) == int:
+        query = 'INSERT INTO nic (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, power, cost, gpl)
+    else:
+        query = 'INSERT INTO nic (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
     return query
 
 def add_commodity_to_db(component):
