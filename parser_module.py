@@ -32,7 +32,7 @@ def parse_pc_validation():
         component = create_commodity(component, row, i)
         sql_caller.add_commodity_to_db(component)
 
-    print('Парсинг завершён!\nОтсканировано компонентов: {} из {}\nДобавлено новых компонентов: {} из {}\n'.format(parsed_components, all_components, added_components, all_components))
+    print('Парсинг завершён!\n\tОтсканировано компонентов: {} из {}\n\tДобавлено новых компонентов: {} из {}\n'.format(parsed_components, all_components, added_components, all_components))
 
 
 
@@ -63,41 +63,20 @@ def create_component(component):
     elif res['type'] == 'WFA':
         res['table'] = 'wifi_adapter'
         res = create_wfa(res)
-    elif res['type'] == 'CBL':
+    elif res['type'] == 'CBL' or res['type'] == 'HDM':
         res['table'] = 'cables'
         res = create_cable(res)
+    elif res['type'] == 'MRK':
+        res['table'] = 'mobile_rack'
+        res = create_mobile_rack(res)
+    elif res['type'] == 'ODD':
+        res['table'] = 'optical_drive'
+        res = create_optical_drive(res)
+    elif res['type'] == 'KEY' or res['type'] == 'MOU' or res['type'] == 'BAG' or res['type'] == 'STY' or res['type'] == 'KMK':
+        res['table'] = 'peripherals'
+        res = create_peripherals(res)
     else:
         return None
-    # elif res['type'] == 'BTA':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'CMA':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'HDM':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'CBL':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'RMK':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'ISW':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'MRK':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'ODD':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'CAR':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'KEY':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'MOU':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'IOS':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'BAG':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'STY':
-    #     res.update({create_cpu()})
-    # elif res['type'] == 'OPTION':
-    #     res.update({create_cpu()})
     return res
 
 def get_uid(component):
@@ -259,6 +238,23 @@ def get_cable_type(name):
     else:
         return 0
 
+
+def create_mobile_rack(res):
+    res['cost'] = 3
+    res['gpl'] = 8
+    return res
+
+
+def create_peripherals(res):
+    res['cost'] = 2
+    res['gpl'] = 3
+    return res
+
+
+def create_optical_drive(res):
+    res['cost'] = 3
+    res['gpl'] = 4
+    return res
 
 def create_commodity(component, row, axe):
     valid_plats = []

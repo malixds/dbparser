@@ -55,8 +55,14 @@ def create_component_query(component):
         return create_nic_query(component)
     elif component['type'] == 'WFA':
         return create_wfa_query(component)
-    elif component['type'] == 'CBL':
+    elif component['type'] == 'CBL' or component['type'] == 'HDM':
         return create_cables_query(component)
+    elif component['type'] == 'MRK':
+        return create_mobile_rack_query(component)
+    elif component['type'] == 'ODD':
+        return create_optical_drive_query(component)
+    elif component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'BAG' or component['type'] == 'STY' or component['type'] == 'KMK':
+        return create_peripherals_query(component)
 
 def create_cpu_query(component):
     uid = component['UID']
@@ -155,6 +161,45 @@ def create_cables_query(component):
         query = 'INSERT INTO cables (uid, name, power, cost, gpl, type_id) VALUES (\'{}\', \'{}\', {}, {}, {}, {});'.format(uid, name, power, cost, gpl, type_id)
     else:
         query = 'INSERT INTO cables (uid, name, cost, gpl, type_id) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, cost, gpl, type_id)
+    return query
+
+
+def create_mobile_rack_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    cost = component['cost']
+    gpl = component['gpl']
+    if type(power) == int:
+        query = 'INSERT INTO mobile_rack (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, power, cost, gpl)
+    else:
+        query = 'INSERT INTO mobile_rack (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
+    return query
+
+
+def create_optical_drive_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    cost = component['cost']
+    gpl = component['gpl']
+    if type(power) == int:
+        query = 'INSERT INTO optical_drive (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, power, cost, gpl)
+    else:
+        query = 'INSERT INTO optical_drive (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
+    return query
+
+
+def create_peripherals_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    cost = component['cost']
+    gpl = component['gpl']
+    if type(power) == int:
+        query = 'INSERT INTO peripherals (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, power, cost, gpl)
+    else:
+        query = 'INSERT INTO peripherals (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
     return query
 
 
