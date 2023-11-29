@@ -5,7 +5,8 @@ from tqdm import tqdm
 
 
 def parse_pc_validation():
-    wb = pd.read_excel("C:\\Users\\timan\Downloads\\valid_test.xlsx", sheet_name='Справочник доп. комплектующих', usecols='A,B,E,H:AS')
+    print('Парсинг компонентов пользовательских устройств:')
+    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\valid_test.xlsx", sheet_name='Справочник доп. комплектующих', usecols='A,B,E,H:AS')
     wb = wb[~wb['UID'].isnull()]
     wb = wb[~wb['Наименование в шаблоне'].isnull()]
     wb = wb.fillna(0)

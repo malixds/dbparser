@@ -36,7 +36,7 @@ def check_availability(uid, table):
 
     # Создание объекта cursor
     cursor = db.cursor()
-    sql = "SELECT * FROM {} WHERE uid = %s;".format(table)
+    sql = "SELECT * FROM {} WHERE uid = '{}'".format(table, uid)
     cursor.execute(sql, (uid,))
     row = cursor.fetchone()
     db.close()
@@ -245,3 +245,12 @@ def check_component_platform_commodity(plat_id, uid_com, table):
     row = cursor.fetchone()
     db.close()
     return row is not None
+
+
+def create_cost_query(component):
+    uid = component['UID']
+    cost = component['cost']
+    gpl = component['gpl']
+    table = component['table']
+    query = "UPDATE {} SET cost = {}, gpl = {} WHERE UID = '{}'".format(table, cost, gpl, uid)
+    return query
