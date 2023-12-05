@@ -1,12 +1,13 @@
 import pandas as pd
+import numpy as np
 import sql_caller
 import re
 from tqdm import tqdm
 
 
 def parse_pc_validation():
-    print('Парсинг компонентов пользовательских устройств:')
-    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\valid_test.xlsx", sheet_name='Справочник доп. комплектующих', usecols='A,B,E,H:AS')
+
+    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры_в10.xlsx", sheet_name='Справочник доп. комплектующих', usecols='A,B,E,F,H:AS')
     wb = wb[~wb['UID'].isnull()]
     wb = wb[~wb['Наименование в шаблоне'].isnull()]
     wb = wb.fillna(0)
@@ -14,6 +15,7 @@ def parse_pc_validation():
     wb = wb.reset_index()
     wb = wb.drop(columns='index')
 
+    print('Парсинг компонентов пользовательских устройств:')
     all_components = int(wb.shape[0])
     added_components, parsed_components = 0, 0
     for i in tqdm(range(1, wb.shape[0])):
@@ -30,13 +32,52 @@ def parse_pc_validation():
             sql_caller.send_sql_query(query)
             added_components += 1
 
-        component = create_commodity(component, row, i)
-        sql_caller.add_commodity_to_db(component)
+        if component['type'] != 'KEY' and component['type'] != 'MOU':
+            component = create_commodity(component, row, i)
+            sql_caller.add_commodity_to_db(component)
 
     print('Парсинг завершён!\n\tОтсканировано компонентов: {} из {}\n\tДобавлено новых компонентов: {} из {}\n'.format(parsed_components, all_components, added_components, all_components))
 
 
+def parse_server_validation():
+    print('Парсинг компонентов серверных:')
+    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры_на одном листе.xlsx", sheet_name='Справочник', usecols='A,C,G,H:AH')
+    wb = wb[~wb['UID'].isnull()]
+    for index, row in wb.iterrows():
+        if row['Наименование в шаблоне'] == '':
+            row['Наименование в шаблоне'] = row['Рабочее наименование ERP']
 
+    wb = wb[~wb['Наименование в шаблоне'].isnull()]
+    wb = wb.fillna(0)
+    wb = wb.drop_duplicates(subset=['UID'])
+    wb = wb.reset_index()
+    wb = wb.drop(columns='index')
+    wb = wb.drop(columns='Рабочее наименование ERP')
+    new_column = wb['UID'].apply(lambda x: np.full((len(x), 1), 0))
+    wb['Потребляемая мощность, Вт'] = 0
+
+    all_components = int(wb.shape[0])
+    added_components, parsed_components, updated_components = 0, 0, 0
+    for i in tqdm(range(139, wb.shape[0])):
+
+        row = wb.iloc[i - 1:i]
+        component = create_component(row)
+
+        if not component:
+            continue
+        parsed_components += 1
+
+        query = sql_caller.create_component_query(component)
+        if not sql_caller.check_availability(component['UID'], component['table']):
+            sql_caller.send_sql_query(query)
+            added_components += 1
+
+        if component['table'] != 'transceivers':
+            component = create_commodity(component, row, i)
+            sql_caller.add_commodity_to_db(component)
+
+    print('Парсинг завершён!\n\tОтсканировано компонентов: {} из {}\n\tДобавлено новых компонентов: {} из {}\n'.format(
+        parsed_components, all_components, added_components, all_components))
 
 
 def create_component(component):
@@ -55,27 +96,52 @@ def create_component(component):
     elif res['type'] == 'SSD' or res['type'] == 'HDD':
         res['table'] = 'drives'
         res = create_drive(res)
-    elif res['type'] == 'VGA':
+    elif res['type'] == 'VGA' or res['type'] == 'GPU':
         res['table'] = 'gpu'
         res = create_vga(res)
-    elif res['type'] == 'NIC':
+    elif res['type'] == 'NIC' or res['type'] == 'OCP':
         res['table'] = 'nic'
         res = create_nic(res)
-    elif res['type'] == 'WFA':
-        res['table'] = 'wifi_adapter'
-        res = create_wfa(res)
-    elif res['type'] == 'CBL' or res['type'] == 'HDM':
-        res['table'] = 'cables'
-        res = create_cable(res)
+    # elif res['type'] == 'WFA':
+    #     res['table'] = 'wifi_adapter'
+    #     res = create_wfa(res)
+    # elif res['type'] == 'CBL' or res['type'] == 'HDM':
+    #     res['table'] = 'cables'
+    #     res = create_cable(res)
     elif res['type'] == 'MRK':
         res['table'] = 'mobile_rack'
         res = create_mobile_rack(res)
     elif res['type'] == 'ODD':
         res['table'] = 'optical_drive'
         res = create_optical_drive(res)
-    elif res['type'] == 'KEY' or res['type'] == 'MOU' or res['type'] == 'BAG' or res['type'] == 'STY' or res['type'] == 'KMK':
-        res['table'] = 'peripherals'
+    elif res['type'] == 'KEY':
+        res['table'] = 'keyboard'
         res = create_peripherals(res)
+    elif res['type'] == 'MOU':
+        res['table'] = 'mouse'
+        res = create_peripherals(res)
+    elif res['type'] == 'KMK':
+        res['table'] = 'tablet_phone'
+        res = create_peripherals(res)
+    elif res['type'] == 'PSU':
+        res['table'] = 'psu'
+        res = create_peripherals(res)
+    elif res['type'] == 'OTR':
+        res['table'] = 'transceivers'
+        res = create_peripherals(res)
+    elif res['type'] == 'SFT':
+        res['table'] = 'server_software'
+        res = create_server_software(res)
+    elif res['type'] == 'HBA' or res['type'] == 'RDC':
+        if 'FC' in res['name']:
+            res['table'] = 'fc_adapter'
+            res = create_fc_adapter(res)
+        else:
+            res['table'] = 'raid'
+            res = create_raid_controller(res)
+    # elif res['type'] == 'CAS':
+    #     res['table'] = '"case"'
+    #     res = create_peripherals(res)
     else:
         return None
     return res
@@ -111,15 +177,19 @@ def create_ram(res):
 
 
 def get_ram_clock(name):
-    if '-' in name:
-        return name.split('-')[4]
-    return name.split(' ')[4][0:4]
+    index = name.find('MHz')
+    temp = index
+    while name[temp-1].isdigit():
+        temp -= 1
+    return name[temp:index]
 
 
 def get_ram_amount(name):
-    if '-' in name:
-        return name.split('-')[3][:-2]
-    return name.split(' ')[3][:-2]
+    index = name.find('GB')
+    temp = index
+    while name[temp-1].isdigit():
+        temp -= 1
+    return name[temp:index]
 
 
 def create_drive(res):
@@ -190,6 +260,18 @@ def get_drive_size(name):
         return '2.5'
 
 
+def create_fc_adapter(res):
+    name = res['name']
+    if 'Quad' in name:
+        res['port_type'] = 'Quad'
+    elif 'Dual' in name:
+        res['port_type'] = 'Dual'
+    res['slot_id'] = 3
+    index = name.find('Gb')
+    res['capacity'] = int(name[index-2:index])
+    return res
+
+
 def create_vga(res):
     res['cost'] = 200
     res['gpl'] = 600
@@ -206,7 +288,11 @@ def create_nic(res):
     return res
 
 def get_nic_slot(name):
-    if '16' in name:
+    if 'PHY' in name:
+        return 9
+    elif 'OCP' in name:
+        return 8
+    elif '16' in name:
         return 3
     elif '8' in name:
         return 2
@@ -252,6 +338,18 @@ def create_peripherals(res):
     return res
 
 
+def create_psu(res):
+    res['cost'] = 2
+    res['gpl'] = 3
+    res['power'] = get_psu_power(res)
+    return res
+
+
+def get_psu_power(res):
+    name = res['name']
+    # Допилить
+
+
 def create_optical_drive(res):
     res['cost'] = 3
     res['gpl'] = 4
@@ -262,6 +360,64 @@ def create_commodity(component, row, axe):
     for col in list(row.columns)[3:]:
         val = row.loc[axe-1, '{0}'.format(col)]
         if val > 0:
+            if col == 'T50 D204CF':
+                col1 = col + '-f'
+                col2 = col + '-b'
+                valid_plats.append(col1)
+                valid_plats.append(col2)
+                continue
+            if 'T40' in col:
+                col1 = col + '-V'
+                col2 = col + '-B'
+                valid_plats.append(col1)
+                valid_plats.append(col2)
+                continue
             valid_plats.append(col)
     component['valid_platform'] = valid_plats
     return component
+
+def create_raid_controller(res):
+    res['cost'] = 0
+    res['gpl'] = 0
+    if res['type'] == 'HBA':
+        res['type_cntrl'] = 2
+    else:
+        res['type_cntrl'] = 1
+    res = get_raid_slots_int_ext(res)
+    res['slot_id'] = get_raid_slots(res)
+    return res
+
+
+def get_raid_slots_int_ext(res):
+    name = res['name']
+    res['int'] = 0
+    res['ext'] = 0
+    if 'P ext' in name:
+        index = name.find('P ext')
+        temp = index
+        while name[temp-1].isdigit():
+            temp -= 1
+        res['ext'] = int(name[temp:index])
+    if 'P int' in name:
+        index = name.find('P int')
+        temp = index
+        while name[temp-1].isdigit():
+            temp -= 1
+        res['int'] = int(name[temp:index])
+    return res
+
+def get_raid_slots(res):
+    if res['int'] + res['ext'] > 8:
+        return 2
+    else:
+        return 12
+
+
+def create_server_software(res):
+    if 'BIOS' in res['name']:
+        res['soft_type'] = 'bios_software'
+    elif 'BMC' in res['name']:
+        res['soft_type'] = 'bmc_software'
+    elif 'Управляющее ПО' in res['name']:
+        res['soft_type'] = 'dss_software'
+    return res

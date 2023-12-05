@@ -5,7 +5,7 @@ def send_sql_query(query):
     db = psycopg2.connect(
         host="localhost",
         port='5432',
-        database="test_parser",
+        database="aqua2",
         user="postgres",
         password="1234"
     )
@@ -14,7 +14,10 @@ def send_sql_query(query):
     cursor = db.cursor()
 
     # Отправка SQL-запроса
-    cursor.execute(query)
+    try:
+        cursor.execute(query)
+    except:
+        return False
     res = True
     if 'SELECT' in query:
         res = cursor.fetchone()
@@ -29,7 +32,7 @@ def check_availability(uid, table):
     db = psycopg2.connect(
         host="localhost",
         port='5432',
-        database="test_parser",
+        database="aqua2",
         user="postgres",
         password="1234"
     )
@@ -37,7 +40,7 @@ def check_availability(uid, table):
     # Создание объекта cursor
     cursor = db.cursor()
     sql = "SELECT * FROM {} WHERE uid = '{}'".format(table, uid)
-    cursor.execute(sql, (uid,))
+    cursor.execute(sql)
     row = cursor.fetchone()
     db.close()
     return row is not None
@@ -51,7 +54,7 @@ def create_component_query(component):
         return create_drive_query(component)
     elif component['type'] == 'VGA':
         return create_gpu_query(component)
-    elif component['type'] == 'NIC':
+    elif component['type'] == 'NIC' or component['type'] == 'OCP':
         return create_nic_query(component)
     elif component['type'] == 'WFA':
         return create_wfa_query(component)
@@ -61,8 +64,51 @@ def create_component_query(component):
         return create_mobile_rack_query(component)
     elif component['type'] == 'ODD':
         return create_optical_drive_query(component)
-    elif component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'BAG' or component['type'] == 'STY' or component['type'] == 'KMK':
+    elif component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'KMK':
         return create_peripherals_query(component)
+    elif component['type'] == 'CAS':
+        return create_case_query(component)
+    elif component['type'] == 'SFT':
+        return create_server_software_query(component)
+    elif (component['type'] == 'HBA' or component['type'] == 'RDC') and component['table'] == 'raid':
+        return create_raid_query(component)
+    elif component['type'] == 'HBA' and component['table'] == 'fc_adapter':
+        return create_fc_adapter_query(component)
+
+
+def create_fc_adapter_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    slot_id = component['slot_id']
+    capacity = component['capacity']
+    port_type = component['port_type']
+    if type(power) == int:
+        query = 'INSERT INTO fc_adapter (uid, name, power, slot_id, capacity, port_type) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(
+            uid, name, power, slot_id, capacity, port_type)
+    else:
+        query = 'INSERT INTO fc_adapter (uid, name, slot_id, capacity, port_type) VALUES (\'{}\', \'{}\', {}, {}, \'{}\');'.format(
+            uid, name, slot_id, capacity, port_type)
+    return query
+
+
+def create_raid_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    cost = component['cost']
+    gpl = component['gpl']
+    slot_id = component['slot_id']
+    int = component['int']
+    ext = component['ext']
+    comp_type = component['type_cntrl']
+    if type(power) == int:
+        query = 'INSERT INTO raid (uid, name, power, cost, gpl, slot_id, int_slots, ext_slots, type) VALUES (\'{}\', \'{}\', {}, {}, {}, {}, {}, {}, {});'.format(
+            uid, name, power, cost, gpl, slot_id, int, ext, comp_type)
+    else:
+        query = 'INSERT INTO raid (uid, name, cost, gpl, slot_id, int_slots, ext_slots, type) VALUES (\'{}\', \'{}\', {}, {}, {}, {}, {}, {});'.format(
+            uid, name, cost, gpl, slot_id, int, ext, comp_type)
+    return query
 
 def create_cpu_query(component):
     uid = component['UID']
@@ -132,6 +178,8 @@ def create_nic_query(component):
         query = 'INSERT INTO nic (uid, name, power, cost, gpl, slot_id) VALUES (\'{}\', \'{}\', {}, {}, {}, {});'.format(uid, name, power, cost, gpl, slot_id)
     elif type(power) == int:
         query = 'INSERT INTO nic (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, power, cost, gpl)
+    elif slot_id != 0:
+        query = 'INSERT INTO nic (uid, name, cost, gpl, slot_id) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, cost, gpl, slot_id)
     else:
         query = 'INSERT INTO nic (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
     return query
@@ -196,12 +244,32 @@ def create_peripherals_query(component):
     power = component['power']
     cost = component['cost']
     gpl = component['gpl']
-    if type(power) == int:
-        query = 'INSERT INTO peripherals (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, power, cost, gpl)
+    table = component['table']
+    if type(power) == int and power > 0:
+        query = 'INSERT INTO {} (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(table, uid, name, power, cost, gpl)
     else:
-        query = 'INSERT INTO peripherals (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
+        query = 'INSERT INTO {} (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(table, uid, name, cost, gpl)
     return query
 
+def create_case_query(component):
+    uid = component['UID']
+    name = component['name']
+    cost = component['cost']
+    gpl = component['gpl']
+    query = 'INSERT INTO case (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
+    return query
+
+
+def create_server_software_query(component):
+    uid = component['UID']
+    name = component['name']
+    try:
+        soft_type = component['soft_type']
+        query = 'INSERT INTO server_software (uid, name, type, full_name) VALUES (\'{}\', \'{}\', \'{}\', \'{}\');'.format(uid, name, soft_type, name)
+        return query
+    except KeyError:
+        query = 'INSERT INTO server_software (uid, name, full_name) VALUES (\'{}\', \'{}\', \'{}\');'.format(uid, name, name)
+        return query
 
 def add_commodity_to_db(component):
     for plat in component['valid_platform']:
@@ -218,7 +286,7 @@ def create_component_platform_commodity_query(plat, uid_cpu, table):
         db = psycopg2.connect(
             host="localhost",
             port='5432',
-            database="test_parser",
+            database="aqua2",
             user="postgres",
             password="1234"
         )
@@ -233,7 +301,7 @@ def check_component_platform_commodity(plat_id, uid_com, table):
     db = psycopg2.connect(
         host="localhost",
         port='5432',
-        database="test_parser",
+        database="aqua2",
         user="postgres",
         password="1234"
     )
