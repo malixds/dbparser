@@ -64,7 +64,8 @@ def create_component_query(component):
         return create_mobile_rack_query(component)
     elif component['type'] == 'ODD':
         return create_optical_drive_query(component)
-    elif component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'KMK':
+    elif (component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'KMK'
+          or component['type'] == 'PSU' or component['type'] == 'JBD' or component['type'] == 'TAB'):
         return create_peripherals_query(component)
     elif component['type'] == 'CAS':
         return create_case_query(component)
@@ -275,13 +276,24 @@ def add_commodity_to_db(component):
     for plat in component['valid_platform']:
         create_component_platform_commodity_query(plat, component['UID'], component['table'])
 
+def get_plat_id(name):
+    plat_id_query = 'SELECT id FROM platform WHERE name = \'{}\';'.format(name)
+    res = send_sql_query(plat_id_query)
+    if res is None:
+        return res
+    return res[0]
+
 def create_component_platform_commodity_query(plat, uid_cpu, table):
-    plat_id_query = 'SELECT id FROM platform WHERE name = \'{}\';'.format(plat)
-    plat_id = send_sql_query(plat_id_query)
+    plat_id = get_plat_id(plat)
     if not plat_id:
         return None
     if not check_component_platform_commodity(plat_id[0], uid_cpu, table):
-        res_query = 'INSERT INTO platform_{} (platform_id, {}_uid) VALUES (\'{}\',\'{}\')'.format(table, table, plat_id[0], uid_cpu)
+        res_query = 'INSERT INTO platform_{} (platform_id, {}_uid) VALUES (\'{}\',\'{}\')'.format(table, table,
+                                                                                                  plat_id, uid_cpu)
+        if table == 'jbod':
+            res_query = 'INSERT INTO platform_{} (platform_id, {}_uid) VALUES (\'{}\',\'{}\')'.format('backplane',
+                                                                                                      table, plat_id,
+                                                                                                      uid_cpu)
 
         db = psycopg2.connect(
             host="localhost",
@@ -309,6 +321,9 @@ def check_component_platform_commodity(plat_id, uid_com, table):
     # Создание объекта cursor
     cursor = db.cursor()
     sql = "SELECT * FROM platform_{} WHERE {}_uid = \'{}\' AND platform_id = \'{}\';".format(table, table, uid_com, plat_id)
+    if table == 'jbod':
+        sql = "SELECT * FROM platform_{} WHERE {}_uid = \'{}\' AND platform_id = \'{}\';".format('backplane', table, uid_com,
+                                                                                                plat_id)
     cursor.execute(sql)
     row = cursor.fetchone()
     db.close()
@@ -322,3 +337,12 @@ def create_cost_query(component):
     table = component['table']
     query = "UPDATE {} SET cost = {}, gpl = {} WHERE UID = '{}'".format(table, cost, gpl, uid)
     return query
+
+
+def remove_commodity(plat, uid_com, table):
+    plat_id = get_plat_id(plat)
+    query = "DELETE FROM platform_{} WHERE {}_uid = '{}' AND platform_id = '{}';".format(table, table, uid_com, plat_id)
+    if table == 'jbod':
+        "DELETE FROM platform_{} WHERE {}_uid = '{}' AND platform_id = '{}';".format('backplane', table, uid_com, plat_id)
+
+    send_sql_query(query)

@@ -21,7 +21,7 @@ def parse_pc_validation():
     for i in tqdm(range(1, wb.shape[0])):
 
         row = wb.iloc[i-1:i]
-        component = create_component(row)
+        component = create_component(row, 'PC')
 
         if not component:
             continue
@@ -32,7 +32,8 @@ def parse_pc_validation():
             sql_caller.send_sql_query(query)
             added_components += 1
 
-        if component['type'] != 'KEY' and component['type'] != 'MOU':
+        if (component['type'] != 'KEY' and component['type'] != 'MOU'
+                and component['type'] != 'KPK' and component['type'] != 'TAB'):
             component = create_commodity(component, row, i)
             sql_caller.add_commodity_to_db(component)
 
@@ -58,10 +59,10 @@ def parse_server_validation():
 
     all_components = int(wb.shape[0])
     added_components, parsed_components, updated_components = 0, 0, 0
-    for i in tqdm(range(139, wb.shape[0])):
+    for i in tqdm(range(1, wb.shape[0])):
 
         row = wb.iloc[i - 1:i]
-        component = create_component(row)
+        component = create_component(row, 'Server')
 
         if not component:
             continue
@@ -80,12 +81,15 @@ def parse_server_validation():
         parsed_components, all_components, added_components, all_components))
 
 
-def create_component(component):
+def create_component(component, table):
 
     res = {'type': get_uid_type(component)}
     res['UID'] = get_uid(component)
     res['name'] = get_name(component)
-    res['power'] = get_power(component)
+    if table == 'Server':
+        res['power'] = get_power(component, 29)
+    elif table == 'PC':
+        res['power'] = get_power(component, 2)
 
     if res['type'] == 'CPU':
         res['table'] = 'cpu'
@@ -114,13 +118,16 @@ def create_component(component):
     elif res['type'] == 'ODD':
         res['table'] = 'optical_drive'
         res = create_optical_drive(res)
+    elif res['type'] == 'JBD':
+        res['table'] = 'jbod'
+        res = create_peripherals(res)
     elif res['type'] == 'KEY':
         res['table'] = 'keyboard'
         res = create_peripherals(res)
     elif res['type'] == 'MOU':
         res['table'] = 'mouse'
         res = create_peripherals(res)
-    elif res['type'] == 'KMK':
+    elif res['type'] == 'KPK' or res['type'] == 'TAB':
         res['table'] = 'tablet_phone'
         res = create_peripherals(res)
     elif res['type'] == 'PSU':
@@ -159,8 +166,8 @@ def get_name(component):
     return component.iloc[0, 1]
 
 
-def get_power(component):
-    return component.iloc[0, 2]
+def get_power(component, power_column):
+    return component.iloc[0, power_column]
 
 
 def create_cpu(res):
@@ -373,6 +380,8 @@ def create_commodity(component, row, axe):
                 valid_plats.append(col2)
                 continue
             valid_plats.append(col)
+        elif val == 0 and sql_caller.check_component_platform_commodity(sql_caller.get_plat_id(col), component['UID'], component['table']):
+            sql_caller.remove_commodity(col, component['UID'], component['table'])
     component['valid_platform'] = valid_plats
     return component
 
