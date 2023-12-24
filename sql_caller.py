@@ -37,6 +37,7 @@ def check_availability(uid, table):
         password="1234"
     )
 
+    table = table.replace('public.', '')
     # Создание объекта cursor
     cursor = db.cursor()
     sql = "SELECT * FROM {} WHERE uid = '{}'".format(table, uid)
@@ -65,7 +66,7 @@ def create_component_query(component):
     elif component['type'] == 'ODD':
         return create_optical_drive_query(component)
     elif (component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'KMK'
-          or component['type'] == 'PSU' or component['type'] == 'JBD' or component['type'] == 'TAB'):
+          or component['type'] == 'JBD' or component['type'] == 'TAB'):
         return create_peripherals_query(component)
     elif component['type'] == 'CAS':
         return create_case_query(component)
@@ -75,6 +76,23 @@ def create_component_query(component):
         return create_raid_query(component)
     elif component['type'] == 'HBA' and component['table'] == 'fc_adapter':
         return create_fc_adapter_query(component)
+    elif (component['type'] == 'PSU'):
+        return create_psu_query(component)
+    elif (component['type'] == 'CAS'):
+        return create_case_query(component)
+
+
+def create_all_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    type_of = component['type']
+    article = component['article']
+    if type(power) is int:
+        query = 'INSERT INTO all_components (uid, name, power, type, article) VALUES (\'{}\', \'{}\', {}, \'{}\', \'{}\');'.format(uid, name, power, type_of, article)
+    else:
+        query = 'INSERT INTO all_components (uid, name, type, article) VALUES (\'{}\', \'{}\', \'{}\', \'{}\');'.format(uid, name, type_of, article)
+    return query
 
 
 def create_fc_adapter_query(component):
@@ -252,12 +270,26 @@ def create_peripherals_query(component):
         query = 'INSERT INTO {} (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(table, uid, name, cost, gpl)
     return query
 
+
+def create_psu_query(component, fake=False):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    if type(power) == int and power > 0:
+        query = 'INSERT INTO psu (uid, name, power, fake) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, power, fake)
+    else:
+        query = 'INSERT INTO psu (uid, name, fake) VALUES (\'{}\', \'{}\', {});'.format(uid, name, fake)
+    return query
+
 def create_case_query(component):
     uid = component['UID']
     name = component['name']
-    cost = component['cost']
-    gpl = component['gpl']
-    query = 'INSERT INTO case (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
+    query = 'INSERT INTO public."case" (uid, name) VALUES (\'{}\', \'{}\');'.format(uid, name)
+    if component['psu_id'] != 1:
+        psu_id = component['psu_id']
+        query = 'INSERT INTO public."case" (uid, name, psu_id) VALUES (\'{}\', \'{}\', \'{}\');'.format(uid, name, psu_id)
+        query_psu = create_psu_query(component, fake=True)
+        send_sql_query(query_psu)
     return query
 
 
@@ -285,9 +317,10 @@ def get_plat_id(name):
 
 def create_component_platform_commodity_query(plat, uid_cpu, table):
     plat_id = get_plat_id(plat)
+    table = table.replace('public.', '').replace('"', '')
     if not plat_id:
         return None
-    if not check_component_platform_commodity(plat_id[0], uid_cpu, table):
+    if not check_component_platform_commodity(plat_id, uid_cpu, table):
         res_query = 'INSERT INTO platform_{} (platform_id, {}_uid) VALUES (\'{}\',\'{}\')'.format(table, table,
                                                                                                   plat_id, uid_cpu)
         if table == 'jbod':
@@ -320,6 +353,7 @@ def check_component_platform_commodity(plat_id, uid_com, table):
 
     # Создание объекта cursor
     cursor = db.cursor()
+    table = table.replace('public.', '').replace('"', '')
     sql = "SELECT * FROM platform_{} WHERE {}_uid = \'{}\' AND platform_id = \'{}\';".format(table, table, uid_com, plat_id)
     if table == 'jbod':
         sql = "SELECT * FROM platform_{} WHERE {}_uid = \'{}\' AND platform_id = \'{}\';".format('backplane', table, uid_com,

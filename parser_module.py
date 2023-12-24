@@ -21,6 +21,7 @@ def parse_pc_validation():
     for i in tqdm(range(1, wb.shape[0])):
 
         row = wb.iloc[i-1:i]
+        add_to_all_components(row, 'PC')
         component = create_component(row, 'PC')
 
         if not component:
@@ -42,7 +43,7 @@ def parse_pc_validation():
 
 def parse_server_validation():
     print('Парсинг компонентов серверных:')
-    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры_на одном листе.xlsx", sheet_name='Справочник', usecols='A,C,G,H:AH')
+    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры_на одном листе.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH')
     wb = wb[~wb['UID'].isnull()]
     for index, row in wb.iterrows():
         if row['Наименование в шаблоне'] == '':
@@ -62,6 +63,7 @@ def parse_server_validation():
     for i in tqdm(range(1, wb.shape[0])):
 
         row = wb.iloc[i - 1:i]
+        add_to_all_components(row, 'Server')
         component = create_component(row, 'Server')
 
         if not component:
@@ -81,15 +83,23 @@ def parse_server_validation():
         parsed_components, all_components, added_components, all_components))
 
 
+def add_to_all_components(component, table):
+    res = {'type': get_uid_type(component)}
+    res['UID'] = get_uid(component)
+    res['name'] = get_name(component)
+    res['power'] = get_power(component, table)
+    res['article'] = get_article(component, table)
+    query = sql_caller.create_all_query(res)
+    if sql_caller.check_availability(res['UID'], 'all_components'):
+        sql_caller.send_sql_query(query)
+
+
 def create_component(component, table):
 
     res = {'type': get_uid_type(component)}
     res['UID'] = get_uid(component)
     res['name'] = get_name(component)
-    if table == 'Server':
-        res['power'] = get_power(component, 29)
-    elif table == 'PC':
-        res['power'] = get_power(component, 2)
+    res['power'] = get_power(component, table)
 
     if res['type'] == 'CPU':
         res['table'] = 'cpu'
@@ -132,7 +142,7 @@ def create_component(component, table):
         res = create_peripherals(res)
     elif res['type'] == 'PSU':
         res['table'] = 'psu'
-        res = create_peripherals(res)
+        res = create_psu(res)
     elif res['type'] == 'OTR':
         res['table'] = 'transceivers'
         res = create_peripherals(res)
@@ -146,9 +156,9 @@ def create_component(component, table):
         else:
             res['table'] = 'raid'
             res = create_raid_controller(res)
-    # elif res['type'] == 'CAS':
-    #     res['table'] = '"case"'
-    #     res = create_peripherals(res)
+    elif res['type'] == 'CAS':
+        res['table'] = 'case'
+        res = create_case(res)
     else:
         return None
     return res
@@ -166,8 +176,18 @@ def get_name(component):
     return component.iloc[0, 1]
 
 
-def get_power(component, power_column):
-    return component.iloc[0, power_column]
+def get_power(component, table):
+    if table == 'Server':
+        return component.iloc[0, 30]
+    elif table == 'PC':
+        return component.iloc[0, 2]
+
+
+def get_article(component, table):
+    if table == 'Server':
+        return component.iloc[0, 2]
+    elif table == 'PC':
+        return component.iloc[0, 3]
 
 
 def create_cpu(res):
@@ -345,6 +365,21 @@ def create_peripherals(res):
     return res
 
 
+def create_case(res):
+    name = res['name']
+    pattern = r'(\d+)W'
+    match = re.search(pattern, name)
+    res['power'] = get_psu_power(res)
+    res['psu_id'] = 1
+    res['table'] = 'public."case"'
+    if match and len(match.group(1)) > 0:
+        res['psu_id'] = res['UID']
+    return res
+
+
+
+
+
 def create_psu(res):
     res['cost'] = 2
     res['gpl'] = 3
@@ -354,7 +389,12 @@ def create_psu(res):
 
 def get_psu_power(res):
     name = res['name']
-    # Допилить
+    pattern = r'(\d+)W'
+    match = re.search(pattern, name)
+    if match:
+        return int(match.group(1))
+    else:
+        return None
 
 
 def create_optical_drive(res):
@@ -364,7 +404,7 @@ def create_optical_drive(res):
 
 def create_commodity(component, row, axe):
     valid_plats = []
-    for col in list(row.columns)[3:]:
+    for col in list(row.columns)[4:]:
         val = row.loc[axe-1, '{0}'.format(col)]
         if val > 0:
             if col == 'T50 D204CF':
