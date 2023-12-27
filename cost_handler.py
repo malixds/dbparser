@@ -35,7 +35,6 @@ def update_costs():
 def create_component_cost(row):
     res = {'UID': row.iloc[0, 0], 'type': row.iloc[0, 3], 'cost': row.iloc[0, 1], 'gpl': row.iloc[0, 2]}
     res = get_table_type(res)
-    res['UID'] = res['UID'].replace('AQ', 'AQC', 1)
     return res
 
 
@@ -46,20 +45,42 @@ def get_table_type(res):
         res['table'] = 'ram'
     elif res['type'] == 'SSD' or res['type'] == 'HDD':
         res['table'] = 'drives'
-    elif res['type'] == 'VGA':
+    elif res['type'] == 'VGA' or res['type'] == 'GPU':
         res['table'] = 'gpu'
-    elif res['type'] == 'NIC':
+    elif res['type'] == 'NIC' or res['type'] == 'OCP':
         res['table'] = 'nic'
+    elif res['type'] == 'FAN' or res['type'] == 'CPC':
+        res['table'] = 'fan'
     elif res['type'] == 'WFA':
         res['table'] = 'wifi_adapter'
-    elif res['type'] == 'CBL' or res['type'] == 'HDM':
-        res['table'] = 'cables'
+    # elif res['type'] == 'CBL' or res['type'] == 'HDM':
+    #     res['table'] = 'cables'
+    #     res = create_cable(res)
     elif res['type'] == 'MRK':
         res['table'] = 'mobile_rack'
     elif res['type'] == 'ODD':
         res['table'] = 'optical_drive'
-    elif res['type'] == 'KEY' or res['type'] == 'MOU' or res['type'] == 'BAG' or res['type'] == 'STY' or res['type'] == 'KMK':
-        res['table'] = 'peripherals'
+    elif res['type'] == 'JBD':
+        res['table'] = 'jbod'
+    elif res['type'] == 'KEY':
+        res['table'] = 'keyboard'
+    elif res['type'] == 'MOU':
+        res['table'] = 'mouse'
+    elif res['type'] == 'KPK' or res['type'] == 'TAB':
+        res['table'] = 'tablet_phone'
+    elif res['type'] == 'PSU':
+        res['table'] = 'psu'
+    elif res['type'] == 'OTR':
+        res['table'] = 'transceivers'
+    elif res['type'] == 'SFT':
+        res['table'] = 'server_software'
+    elif res['type'] == 'HBA' or res['type'] == 'RDC':
+        if 'FC' in res['name']:
+            res['table'] = 'fc_adapter'
+        else:
+            res['table'] = 'raid'
+    elif res['type'] == 'CAS':
+        res['table'] = 'case'
     else:
         res['table'] = False
         return res
