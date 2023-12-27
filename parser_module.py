@@ -88,9 +88,9 @@ def add_to_all_components(component, table):
     res['UID'] = get_uid(component)
     res['name'] = get_name(component)
     res['power'] = get_power(component, table)
-    res['article'] = get_article(component, table)
+    res['article'] = str(get_article(component, table))[:-2]
     query = sql_caller.create_all_query(res)
-    if sql_caller.check_availability(res['UID'], 'all_components'):
+    if not sql_caller.check_availability(res['UID'], 'all_components'):
         sql_caller.send_sql_query(query)
 
 
@@ -116,9 +116,12 @@ def create_component(component, table):
     elif res['type'] == 'NIC' or res['type'] == 'OCP':
         res['table'] = 'nic'
         res = create_nic(res)
-    # elif res['type'] == 'WFA':
-    #     res['table'] = 'wifi_adapter'
-    #     res = create_wfa(res)
+    elif res['type'] == 'FAN' or res['type'] == 'CPC':
+        res['table'] = 'fan'
+        res = create_fan(res)
+    elif res['type'] == 'WFA':
+        res['table'] = 'wifi_adapter'
+        res = create_wfa(res)
     # elif res['type'] == 'CBL' or res['type'] == 'HDM':
     #     res['table'] = 'cables'
     #     res = create_cable(res)
@@ -200,6 +203,11 @@ def create_ram(res):
     res['gpl'] = 60
     res['clock'] = get_ram_clock(res['name'])
     res['amount'] = get_ram_amount(res['name'])
+    return res
+
+def create_fan(res):
+    res['cost'] = 0
+    res['gpl'] = 0
     return res
 
 
@@ -416,6 +424,12 @@ def create_commodity(component, row, axe):
             if 'T40' in col:
                 col1 = col + '-V'
                 col2 = col + '-B'
+                valid_plats.append(col1)
+                valid_plats.append(col2)
+                continue
+            if 'P30 K43 USFF1' == col:
+                col1 = 'PRO P30 K44'
+                col2 = 'PRO P30 K43'
                 valid_plats.append(col1)
                 valid_plats.append(col2)
                 continue

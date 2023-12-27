@@ -53,7 +53,7 @@ def create_component_query(component):
         return create_ram_query(component)
     elif component['type'] == 'SSD' or component['type'] == 'HDD':
         return create_drive_query(component)
-    elif component['type'] == 'VGA':
+    elif component['type'] == 'VGA' or component['type'] == 'GPU':
         return create_gpu_query(component)
     elif component['type'] == 'NIC' or component['type'] == 'OCP':
         return create_nic_query(component)
@@ -66,7 +66,7 @@ def create_component_query(component):
     elif component['type'] == 'ODD':
         return create_optical_drive_query(component)
     elif (component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'KMK'
-          or component['type'] == 'JBD' or component['type'] == 'TAB'):
+          or component['type'] == 'JBD' or component['type'] == 'TAB') or component['type'] == 'FAN' or component['type'] == 'CPC':
         return create_peripherals_query(component)
     elif component['type'] == 'CAS':
         return create_case_query(component)
@@ -307,6 +307,8 @@ def create_server_software_query(component):
 def add_commodity_to_db(component):
     for plat in component['valid_platform']:
         create_component_platform_commodity_query(plat, component['UID'], component['table'])
+        if component['type'] == 'CAS' and component['power'] is not None:
+            create_component_platform_commodity_query(plat, component['UID'], 'psu')
 
 def get_plat_id(name):
     plat_id_query = 'SELECT id FROM platform WHERE name = \'{}\';'.format(name)
