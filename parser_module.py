@@ -34,7 +34,8 @@ def parse_pc_validation():
             added_components += 1
 
         if (component['type'] != 'KEY' and component['type'] != 'MOU'
-                and component['type'] != 'KPK' and component['type'] != 'TAB'):
+                and component['type'] != 'KPK' and component['type'] != 'TAB' and component['type'] != 'CBL'
+                and component['type'] != 'HDM'):
             component = create_commodity(component, row, i)
             sql_caller.add_commodity_to_db(component)
 
@@ -68,6 +69,8 @@ def parse_server_validation():
 
         if not component:
             continue
+        if component['type'] == 'BRB':
+            continue
         parsed_components += 1
 
         query = sql_caller.create_component_query(component)
@@ -100,6 +103,7 @@ def create_component(component, table):
     res['UID'] = get_uid(component)
     res['name'] = get_name(component)
     res['power'] = get_power(component, table)
+    res['article'] = str(get_article(component, table))[:-2]
 
     if res['type'] == 'CPU':
         res['table'] = 'cpu'
@@ -113,22 +117,27 @@ def create_component(component, table):
     elif res['type'] == 'VGA' or res['type'] == 'GPU':
         res['table'] = 'gpu'
         res = create_vga(res)
-    elif res['type'] == 'NIC' or res['type'] == 'OCP':
+    elif (res['type'] == 'NIC' or res['type'] == 'OCP') and table == 'Server':
         res['table'] = 'nic'
         res = create_nic(res)
+    elif res['type'] == 'NIC' and table == 'PC':
+        res['table'] = 'netcard'
     elif res['type'] == 'FAN' or res['type'] == 'CPC':
         res['table'] = 'fan'
         res = create_fan(res)
-    elif res['type'] == 'WFA':
+    elif res['type'] == 'WFA' and not 'Антенна' in res['name']:
         res['table'] = 'wifi_adapter'
         res = create_wfa(res)
-    # elif res['type'] == 'CBL' or res['type'] == 'HDM':
-    #     res['table'] = 'cables'
-    #     res = create_cable(res)
+    elif res['type'] == 'CBL' or res['type'] == 'HDM':
+        if table == 'Server':
+            res['table'] = 'cables'
+        else:
+            res['table'] = 'pc_cables'
+        res = create_cable(res)
     elif res['type'] == 'MRK':
         res['table'] = 'mobile_rack'
         res = create_mobile_rack(res)
-    elif res['type'] == 'ODD':
+    elif res['type'] == 'ODD' and res['UID'] != 'AQC-ODD-00006':
         res['table'] = 'optical_drive'
         res = create_optical_drive(res)
     elif res['type'] == 'JBD':
@@ -152,6 +161,8 @@ def create_component(component, table):
     elif res['type'] == 'SFT':
         res['table'] = 'server_software'
         res = create_server_software(res)
+    elif res['type'] == 'BRB':
+        res['table'] = 'barebone_laptop'
     elif res['type'] == 'HBA' or res['type'] == 'RDC':
         if 'FC' in res['name']:
             res['table'] = 'fc_adapter'
@@ -191,7 +202,6 @@ def get_article(component, table):
         return component.iloc[0, 2]
     elif table == 'PC':
         return component.iloc[0, 3]
-
 
 def create_cpu(res):
     res['cost'] = 100
@@ -342,9 +352,8 @@ def create_wfa(res):
     res['gpl'] = 10
     return res
 
+
 def create_cable(res):
-    res['cost'] = 3
-    res['gpl'] = 8
     res['type_id'] = get_cable_type(res['name'])
     return res
 
@@ -428,10 +437,14 @@ def create_commodity(component, row, axe):
                 valid_plats.append(col2)
                 continue
             if 'P30 K43 USFF1' == col:
-                col1 = 'PRO P30 K44'
-                col2 = 'PRO P30 K43'
+                col1 = 'PRO P30 K43'
+                col2 = 'P30 K43'
                 valid_plats.append(col1)
                 valid_plats.append(col2)
+                continue
+            if 'P30 K44 SFF1' == col:
+                col1 = 'PRO P30 K44'
+                valid_plats.append(col1)
                 continue
             valid_plats.append(col)
         elif val == 0 and sql_caller.check_component_platform_commodity(sql_caller.get_plat_id(col), component['UID'], component['table']):

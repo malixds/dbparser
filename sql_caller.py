@@ -55,8 +55,10 @@ def create_component_query(component):
         return create_drive_query(component)
     elif component['type'] == 'VGA' or component['type'] == 'GPU':
         return create_gpu_query(component)
-    elif component['type'] == 'NIC' or component['type'] == 'OCP':
+    elif (component['type'] == 'NIC' or component['type'] == 'OCP') and component['table'] == 'nic':
         return create_nic_query(component)
+    elif component['type'] == 'NIC' and component['table'] == 'netcard':
+        return create_netcard_query(component)
     elif component['type'] == 'WFA':
         return create_wfa_query(component)
     elif component['type'] == 'CBL' or component['type'] == 'HDM':
@@ -65,6 +67,8 @@ def create_component_query(component):
         return create_mobile_rack_query(component)
     elif component['type'] == 'ODD':
         return create_optical_drive_query(component)
+    elif component['type'] == 'BRB':
+        return create_barebone_laptop_query(component)
     elif (component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'KMK'
           or component['type'] == 'JBD' or component['type'] == 'TAB') or component['type'] == 'FAN' or component['type'] == 'CPC':
         return create_peripherals_query(component)
@@ -94,6 +98,19 @@ def create_all_query(component):
         query = 'INSERT INTO all_components (uid, name, type, article) VALUES (\'{}\', \'{}\', \'{}\', \'{}\');'.format(uid, name, type_of, article)
     return query
 
+
+def create_netcard_query(component):
+    uid = component['UID']
+    name = component['name']
+    power = component['power']
+    vendor_code = component['article']
+    if type(power) == int:
+        query = 'INSERT INTO netcard (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+            uid, name, power, vendor_code)
+    else:
+        query = 'INSERT INTO netcard (uid, name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\');'.format(
+            uid, name, vendor_code)
+    return query
 
 def create_fc_adapter_query(component):
     uid = component['UID']
@@ -221,13 +238,13 @@ def create_cables_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     type_id = component['type_id']
-    if type(power) == int:
-        query = 'INSERT INTO cables (uid, name, power, cost, gpl, type_id) VALUES (\'{}\', \'{}\', {}, {}, {}, {});'.format(uid, name, power, cost, gpl, type_id)
+    article = component['article']
+    table = component['table']
+    if table == 'cables':
+        query = 'INSERT INTO {} (uid, name, type_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {});'.format(table, uid, name, type_id, article)
     else:
-        query = 'INSERT INTO cables (uid, name, cost, gpl, type_id) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, cost, gpl, type_id)
+        query = 'INSERT INTO {} (uid, name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\');'.format(table, uid, name, article)
     return query
 
 
@@ -241,6 +258,14 @@ def create_mobile_rack_query(component):
         query = 'INSERT INTO mobile_rack (uid, name, power, cost, gpl) VALUES (\'{}\', \'{}\', {}, {}, {});'.format(uid, name, power, cost, gpl)
     else:
         query = 'INSERT INTO mobile_rack (uid, name, cost, gpl) VALUES (\'{}\', \'{}\', {}, {});'.format(uid, name, cost, gpl)
+    return query
+
+
+def create_barebone_laptop_query(component):
+    uid = component['UID']
+    name = component['name']
+    vendor = component['article']
+    query = 'INSERT INTO barebone_laptop (uid, name, vendor_code) VALUES (\'{}\', \'{}\', {});'.format(uid, name, vendor)
     return query
 
 
