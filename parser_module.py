@@ -11,13 +11,17 @@ def parse_pc_validation():
     wb = wb[~wb['UID'].isnull()]
     wb = wb[~wb['Наименование в шаблоне'].isnull()]
     wb = wb.fillna(0)
+    # for i in range(1, wb.shape[0]):
+    #     row = wb.iloc[i-1:i]
+    #     add_to_all_components(row, 'PC')
+
     wb = wb.drop_duplicates(subset=['UID'])
     wb = wb.reset_index()
     wb = wb.drop(columns='index')
 
     print('Парсинг компонентов пользовательских устройств:')
     all_components = int(wb.shape[0])
-    added_components, parsed_components = 0, 0
+    added_components, parsed_components, updated_components = 0, 0, 0
     for i in tqdm(range(1, wb.shape[0])):
 
         row = wb.iloc[i-1:i]
@@ -32,6 +36,10 @@ def parse_pc_validation():
         if not sql_caller.check_availability(component['UID'], component['table']):
             sql_caller.send_sql_query(query)
             added_components += 1
+        else:
+            query = sql_caller.refactor_to_update_query(query)
+            sql_caller.send_sql_query(query)
+            updated_components += 1
 
         if (component['type'] != 'KEY' and component['type'] != 'MOU'
                 and component['type'] != 'KPK' and component['type'] != 'TAB' and component['type'] != 'CBL'
@@ -39,12 +47,13 @@ def parse_pc_validation():
             component = create_commodity(component, row, i)
             sql_caller.add_commodity_to_db(component)
 
-    print('Парсинг завершён!\n\tОтсканировано компонентов: {} из {}\n\tДобавлено новых компонентов: {} из {}\n'.format(parsed_components, all_components, added_components, all_components))
+    print('Парсинг завершён!\n\tОтсканировано компонентов: {} из {}\n\tДобавлено новых компонентов: {} из {}\n\tОбновлено компонентов: {} из {}\n'.format(
+            parsed_components, all_components, added_components, all_components, updated_components, all_components))
 
 
 def parse_server_validation():
     print('Парсинг компонентов серверных:')
-    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры_на одном листе.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH')
+    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры_на одном листе.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ')
     wb = wb[~wb['UID'].isnull()]
     for index, row in wb.iterrows():
         if row['Наименование в шаблоне'] == '':
@@ -56,12 +65,10 @@ def parse_server_validation():
     wb = wb.reset_index()
     wb = wb.drop(columns='index')
     wb = wb.drop(columns='Рабочее наименование ERP')
-    new_column = wb['UID'].apply(lambda x: np.full((len(x), 1), 0))
-    wb['Потребляемая мощность, Вт'] = 0
 
     all_components = int(wb.shape[0])
     added_components, parsed_components, updated_components = 0, 0, 0
-    for i in tqdm(range(1, wb.shape[0])):
+    for i in tqdm(range(300, wb.shape[0])):
 
         row = wb.iloc[i - 1:i]
         add_to_all_components(row, 'Server')
@@ -77,13 +84,17 @@ def parse_server_validation():
         if not sql_caller.check_availability(component['UID'], component['table']):
             sql_caller.send_sql_query(query)
             added_components += 1
+        else:
+            query = sql_caller.refactor_to_update_query(query)
+            sql_caller.send_sql_query(query)
+            updated_components += 1
 
         if component['table'] != 'transceivers':
             component = create_commodity(component, row, i)
             sql_caller.add_commodity_to_db(component)
 
-    print('Парсинг завершён!\n\tОтсканировано компонентов: {} из {}\n\tДобавлено новых компонентов: {} из {}\n'.format(
-        parsed_components, all_components, added_components, all_components))
+    print('Парсинг завершён!\n\tОтсканировано компонентов: {} из {}\n\tДобавлено новых компонентов: {} из {}\n\tОбновлено компонентов: {} из {}\n'.format(
+        parsed_components, all_components, added_components, all_components, updated_components, all_components))
 
 
 def add_to_all_components(component, table):
@@ -91,9 +102,9 @@ def add_to_all_components(component, table):
     res['UID'] = get_uid(component)
     res['name'] = get_name(component)
     res['power'] = get_power(component, table)
-    res['article'] = str(get_article(component, table))[:-2]
+    res['article'] = str(get_article(component, table)).replace('.0', '')
     query = sql_caller.create_all_query(res)
-    if not sql_caller.check_availability(res['UID'], 'all_components'):
+    if not sql_caller.check_availability_all_components(res['article']):
         sql_caller.send_sql_query(query)
 
 
@@ -102,8 +113,12 @@ def create_component(component, table):
     res = {'type': get_uid_type(component)}
     res['UID'] = get_uid(component)
     res['name'] = get_name(component)
-    res['power'] = get_power(component, table)
-    res['article'] = str(get_article(component, table))[:-2]
+    power = get_power(component, table)
+    if power:
+        res['power'] = power
+    else:
+        res['power'] = 0
+    res['article'] = str(get_article(component, table)).replace('.0', '')
 
     if res['type'] == 'CPU':
         res['table'] = 'cpu'
@@ -423,7 +438,7 @@ def create_commodity(component, row, axe):
     valid_plats = []
     for col in list(row.columns)[4:]:
         val = row.loc[axe-1, '{0}'.format(col)]
-        if val > 0:
+        if val > 0 and col != 'Потребляемая мощность, Вт':
             if col == 'T50 D204CF':
                 col1 = col + '-f'
                 col2 = col + '-b'
