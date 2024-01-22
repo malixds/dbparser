@@ -173,6 +173,9 @@ def create_component(component, table):
     elif res['type'] == 'OTR':
         res['table'] = 'transceivers'
         res = create_peripherals(res)
+    elif res['type'] == 'LTE':
+        res['table'] = 'lte'
+        res = create_peripherals(res)
     elif res['type'] == 'SFT':
         res['table'] = 'server_software'
         res = create_server_software(res)
