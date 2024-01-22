@@ -43,7 +43,7 @@ def parse_pc_validation():
 
         if (component['type'] != 'KEY' and component['type'] != 'MOU'
                 and component['type'] != 'KPK' and component['type'] != 'TAB' and component['type'] != 'CBL'
-                and component['type'] != 'HDM'):
+                and component['type'] != 'HDM' and component['type'] != 'LTE' and component['type'] != 'DOC'):
             component = create_commodity(component, row, i)
             sql_caller.add_commodity_to_db(component)
 
@@ -157,6 +157,9 @@ def create_component(component, table):
         res = create_optical_drive(res)
     elif res['type'] == 'JBD':
         res['table'] = 'jbod'
+        res = create_peripherals(res)
+    elif res['type'] == 'DOC':
+        res['table'] = 'doc_station'
         res = create_peripherals(res)
     elif res['type'] == 'KEY':
         res['table'] = 'keyboard'

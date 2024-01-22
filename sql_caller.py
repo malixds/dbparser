@@ -88,7 +88,7 @@ def create_component_query(component):
         return create_barebone_laptop_query(component)
     elif (component['type'] == 'KEY' or component['type'] == 'MOU' or component['type'] == 'KMK' or component['type'] == 'OTR'
           or component['type'] == 'JBD' or component['type'] == 'TAB' or component['type'] == 'KPK' or component['type'] == 'FAN'
-          or component['type'] == 'CPC' or component['type'] == 'LTE'):
+          or component['type'] == 'CPC' or component['type'] == 'LTE' or component['type'] == 'DOC'):
         return create_peripherals_query(component)
     elif component['type'] == 'CAS':
         return create_case_query(component)
