@@ -6,7 +6,7 @@ def create_connection():
     connection = psycopg2.connect(
     host="localhost",
     port='5432',
-    database="aqua2",
+    database="aqua3",
     user="postgres",
     password="1234"
     )

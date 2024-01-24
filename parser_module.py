@@ -316,6 +316,8 @@ def get_drive_size(name):
         return 'M.2 22110'
     elif 'M.2 2242' in name:
         return 'M.2 2242'
+    elif 'M.2 2280' in name:
+        return 'M.2 2280'
     elif 'HHHL' in name:
         return 'HHHL'
     elif '3.5' in name:
