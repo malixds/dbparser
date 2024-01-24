@@ -1,14 +1,20 @@
 import psycopg2
 
+
+def create_connection():
+    connection = None
+    connection = psycopg2.connect(
+    host="localhost",
+    port='5432',
+    database="aqua2",
+    user="postgres",
+    password="1234"
+    )
+    return connection
+
 def send_sql_query(query):
     # Подключение к базе данных
-    db = psycopg2.connect(
-        host="localhost",
-        port='5432',
-        database="aqua2",
-        user="postgres",
-        password="1234"
-    )
+    db = create_connection()
 
     # Создание объекта cursor
     cursor = db.cursor()
@@ -29,13 +35,7 @@ def send_sql_query(query):
     return res
 
 def check_availability(uid, table):
-    db = psycopg2.connect(
-        host="localhost",
-        port='5432',
-        database="aqua2",
-        user="postgres",
-        password="1234"
-    )
+    db = create_connection()
 
     table = table.replace('public.', '')
     # Создание объекта cursor
@@ -47,13 +47,7 @@ def check_availability(uid, table):
     return row is not None
 
 def check_availability_all_components(article):
-    db = psycopg2.connect(
-        host="localhost",
-        port='5432',
-        database="aqua2",
-        user="postgres",
-        password="1234"
-    )
+    db = create_connection()
 
     # Создание объекта cursor
     cursor = db.cursor()
@@ -356,13 +350,7 @@ def create_component_platform_commodity_query(plat, uid_cpu, table):
                                                                                                       table, plat_id,
                                                                                                       uid_cpu)
 
-        db = psycopg2.connect(
-            host="localhost",
-            port='5432',
-            database="aqua2",
-            user="postgres",
-            password="1234"
-        )
+        db = create_connection()
 
         cursor = db.cursor()
         cursor.execute(res_query)
@@ -371,13 +359,7 @@ def create_component_platform_commodity_query(plat, uid_cpu, table):
 
 
 def check_component_platform_commodity(plat_id, uid_com, table):
-    db = psycopg2.connect(
-        host="localhost",
-        port='5432',
-        database="aqua2",
-        user="postgres",
-        password="1234"
-    )
+    db = create_connection()
 
     # Создание объекта cursor
     cursor = db.cursor()
@@ -426,4 +408,3 @@ def refactor_to_update_query(query):
     uid_res = ' WHERE uid = {};'.format(uid)
     query = query + uid_res
     return query
-
