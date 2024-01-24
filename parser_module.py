@@ -68,7 +68,7 @@ def parse_server_validation():
 
     all_components = int(wb.shape[0])
     added_components, parsed_components, updated_components = 0, 0, 0
-    for i in tqdm(range(300, wb.shape[0])):
+    for i in tqdm(range(1, wb.shape[0])):
 
         row = wb.iloc[i - 1:i]
         add_to_all_components(row, 'Server')
