@@ -460,14 +460,10 @@ def create_commodity(component, row, axe):
                 valid_plats.append(col2)
                 continue
             if 'P30 K43 USFF1' == col:
-                col1 = 'PRO P30 K43'
-                col2 = 'P30 K43'
+                col1 = 'P30 K43 USFF1'
+                col2 = 'P30 K43 USFF1 noLVDS'
                 valid_plats.append(col1)
                 valid_plats.append(col2)
-                continue
-            if 'P30 K44 SFF1' == col:
-                col1 = 'PRO P30 K44'
-                valid_plats.append(col1)
                 continue
             valid_plats.append(col)
         elif val == 0 and sql_caller.check_component_platform_commodity(sql_caller.get_plat_id(col), component['UID'], component['table']):
