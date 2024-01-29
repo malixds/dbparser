@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 def parse_pc_validation():
 
-    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры_в10.xlsx", sheet_name='Справочник доп. комплектующих', usecols='A,B,E,F,H:AS')
+    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры.xlsx", sheet_name='Справочник доп. комплектующих', usecols='A,B,E,F,H:AS')
     wb = wb[~wb['UID'].isnull()]
     wb = wb[~wb['Наименование в шаблоне'].isnull()]
     wb = wb.fillna(0)
@@ -53,7 +53,7 @@ def parse_pc_validation():
 
 def parse_server_validation():
     print('Парсинг компонентов серверных:')
-    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры_на одном листе.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ')
+    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры новый формат.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ')
     wb = wb[~wb['UID'].isnull()]
     for index, row in wb.iterrows():
         if row['Наименование в шаблоне'] == '':
@@ -179,7 +179,7 @@ def create_component(component, table):
     elif res['type'] == 'LTE':
         res['table'] = 'lte'
         res = create_peripherals(res)
-    elif res['type'] == 'SFT':
+    elif res['type'] == 'SFT' and table == 'Server':
         res['table'] = 'server_software'
         res = create_server_software(res)
     elif res['type'] == 'BRB':
@@ -225,20 +225,14 @@ def get_article(component, table):
         return component.iloc[0, 3]
 
 def create_cpu(res):
-    res['cost'] = 100
-    res['gpl'] = 300
     return res
 
 def create_ram(res):
-    res['cost'] = 19
-    res['gpl'] = 60
     res['clock'] = get_ram_clock(res['name'])
     res['amount'] = get_ram_amount(res['name'])
     return res
 
 def create_fan(res):
-    res['cost'] = 0
-    res['gpl'] = 0
     return res
 
 
@@ -259,8 +253,6 @@ def get_ram_amount(name):
 
 
 def create_drive(res):
-    res['cost'] = 120
-    res['gpl'] = 450
     res['capacity'] = get_drive_capacity(res['name'])
     res['type_id'] = get_drive_type(res['name'])
     res['group_id'] = get_drive_group(res['name'])
@@ -341,14 +333,10 @@ def create_fc_adapter(res):
 
 
 def create_vga(res):
-    res['cost'] = 200
-    res['gpl'] = 600
     res['slot_id'] = 3
     return res
 
 def create_nic(res):
-    res['cost'] = 60
-    res['gpl'] = 200
     if get_nic_slot(res['name']):
         res['slot_id'] = get_nic_slot(res['name'])
     else:
@@ -371,8 +359,6 @@ def get_nic_slot(name):
 
 
 def create_wfa(res):
-    res['cost'] = 5
-    res['gpl'] = 10
     return res
 
 
@@ -394,14 +380,10 @@ def get_cable_type(name):
 
 
 def create_mobile_rack(res):
-    res['cost'] = 3
-    res['gpl'] = 8
     return res
 
 
 def create_peripherals(res):
-    res['cost'] = 2
-    res['gpl'] = 3
     return res
 
 
@@ -421,8 +403,6 @@ def create_case(res):
 
 
 def create_psu(res):
-    res['cost'] = 2
-    res['gpl'] = 3
     res['power'] = get_psu_power(res)
     return res
 
@@ -438,8 +418,6 @@ def get_psu_power(res):
 
 
 def create_optical_drive(res):
-    res['cost'] = 3
-    res['gpl'] = 4
     return res
 
 def create_commodity(component, row, axe):
@@ -472,8 +450,6 @@ def create_commodity(component, row, axe):
     return component
 
 def create_raid_controller(res):
-    res['cost'] = 0
-    res['gpl'] = 0
     if res['type'] == 'HBA':
         res['type_cntrl'] = 2
     else:

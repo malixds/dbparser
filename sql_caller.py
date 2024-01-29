@@ -145,29 +145,25 @@ def create_raid_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     slot_id = component['slot_id']
     int = component['int']
     ext = component['ext']
     comp_type = component['type_cntrl']
     article = component['article']
     if type(power) == int:
-        query = 'INSERT INTO raid (uid, name, power, cost, gpl, slot_id, int_slots, ext_slots, type, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, {}, {}, {}, {}, \'{}\');'.format(
-            uid, name, power, cost, gpl, slot_id, int, ext, comp_type, article)
+        query = 'INSERT INTO raid (uid, name, power, slot_id, int_slots, ext_slots, type, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, {}, {}, \'{}\');'.format(
+            uid, name, power, slot_id, int, ext, comp_type, article)
     else:
-        query = 'INSERT INTO raid (uid, name, cost, gpl, slot_id, int_slots, ext_slots, type, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, {}, {}, {}, \'{}\');'.format(
-            uid, name, cost, gpl, slot_id, int, ext, comp_type, article)
+        query = 'INSERT INTO raid (uid, name, slot_id, int_slots, ext_slots, type, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, {}, \'{}\');'.format(
+            uid, name, slot_id, int, ext, comp_type, article)
     return query
 
 def create_cpu_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     article = component['article']
-    query = 'INSERT INTO cpu (uid, name, power, cost, gpl, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(uid, name, power, cost, gpl, article)
+    query = 'INSERT INTO cpu (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
     return query
 
 def create_ram_query(component):
@@ -176,10 +172,8 @@ def create_ram_query(component):
     power = component['power']
     clock = component['clock']
     amount = component['amount']
-    cost = component['cost']
-    gpl = component['gpl']
     article = component['article']
-    query = 'INSERT INTO ram (uid, name, power, cost, gpl, clock, amount, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, {}, {}, \'{}\');'.format(uid, name, power, cost, gpl, clock, amount, article)
+    query = 'INSERT INTO ram (uid, name, power, clock, amount, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(uid, name, power, clock, amount, article)
     return query
 
 
@@ -192,35 +186,29 @@ def create_drive_query(component):
     group_id = component['group_id']
     slot_id = component['slot_id']
     size = component['size']
-    cost = component['cost']
-    gpl = component['gpl']
     article = component['article']
-    query = 'INSERT INTO drives (uid, name, size, power, cost, gpl, type_id, group_id, slot_id, capacity, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', {}, {}, {}, {}, {}, {}, {}, \'{}\');'.format(uid, name, size, power, cost, gpl, type_id, group_id, slot_id, capacity, article)
+    query = 'INSERT INTO drives (uid, name, size, power, type_id, group_id, slot_id, capacity, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', {}, {}, {}, {}, {}, \'{}\');'.format(uid, name, size, power, type_id, group_id, slot_id, capacity, article)
     return query
 
 def create_gpu_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     slot_id = component['slot_id']
     article = component['article']
-    query = 'INSERT INTO gpu (uid, name, power, cost, gpl, slot_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, {}, \'{}\');'.format(uid, name, power, cost, gpl, slot_id, article)
+    query = 'INSERT INTO gpu (uid, name, power, slot_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, \'{}\');'.format(uid, name, power, slot_id, article)
     return query
 
 def create_nic_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     slot_id = component['slot_id']
     article = component['article']
     if slot_id != 0:
-        query = 'INSERT INTO nic (uid, name, cost, power, gpl, slot_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(uid, name, cost, power, gpl, slot_id, article)
+        query = 'INSERT INTO nic (uid, name, power, slot_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, \'{}\');'.format(uid, name, power, slot_id, article)
     else:
-        query = 'INSERT INTO nic (uid, name, cost, power, gpl, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, \'{}\');'.format(uid, name, cost, power, gpl, article)
+        query = 'INSERT INTO nic (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
     return query
 
 
@@ -228,10 +216,8 @@ def create_wfa_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     article = component['article']
-    query = 'INSERT INTO wifi_adapter (uid, name, power, cost, gpl, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(uid, name, power, cost, gpl, article)
+    query = 'INSERT INTO wifi_adapter (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
     return query
 
 
@@ -253,10 +239,8 @@ def create_mobile_rack_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     article = component['article']
-    query = 'INSERT INTO mobile_rack (uid, name, power, cost, gpl, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(uid, name, power, cost, gpl, article)
+    query = 'INSERT INTO mobile_rack (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
     return query
 
 
@@ -272,10 +256,8 @@ def create_optical_drive_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     article = component['article']
-    query = 'INSERT INTO optical_drive (uid, name, power, cost, gpl, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(uid, name, power, cost, gpl, article)
+    query = 'INSERT INTO optical_drive (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
     return query
 
 
@@ -283,11 +265,9 @@ def create_peripherals_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
-    cost = component['cost']
-    gpl = component['gpl']
     table = component['table']
     article = component['article']
-    query = 'INSERT INTO {} (uid, name, power, cost, gpl, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(table, uid, name, power, cost, gpl, article)
+    query = 'INSERT INTO {} (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(table, uid, name, power, article)
     return query
 
 
