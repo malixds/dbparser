@@ -4,13 +4,14 @@ import psycopg2
 def create_connection():
     connection = None
     connection = psycopg2.connect(
-    host="localhost",
-    port='5432',
-    database="aqua3",
-    user="postgres",
-    password="1234"
+        host="localhost",
+        port='5432',
+        database="tima_db",
+        user="postgres",
+        password="1234"
     )
     return connection
+
 
 def send_sql_query(query):
     # Подключение к базе данных
@@ -29,10 +30,10 @@ def send_sql_query(query):
         res = cursor.fetchone()
     db.commit()
 
-
     # Закрытие соединения с базой данных
     db.close()
     return res
+
 
 def check_availability(uid, table):
     db = create_connection()
@@ -46,6 +47,7 @@ def check_availability(uid, table):
     db.close()
     return row is not None
 
+
 def check_availability_all_components(article):
     db = create_connection()
 
@@ -56,6 +58,7 @@ def check_availability_all_components(article):
     row = cursor.fetchone()
     db.close()
     return row is not None
+
 
 def create_component_query(component):
     if component['type'] == 'CPU':
@@ -105,9 +108,11 @@ def create_all_query(component):
     type_of = component['type']
     article = component['article']
     if type(power) is int:
-        query = 'INSERT INTO all_components (uid, name, power, type, article) VALUES (\'{}\', \'{}\', {}, \'{}\', \'{}\');'.format(uid, name, power, type_of, article)
+        query = 'INSERT INTO all_components (uid, name, power, type, article) VALUES (\'{}\', \'{}\', {}, \'{}\', \'{}\');'.format(
+            uid, name, power, type_of, article)
     else:
-        query = 'INSERT INTO all_components (uid, name, power, type, article) VALUES (\'{}\', \'{}\', {}, \'{}\', \'{}\');'.format(uid, name, 0, type_of, article)
+        query = 'INSERT INTO all_components (uid, name, power, type, article) VALUES (\'{}\', \'{}\', {}, \'{}\', \'{}\');'.format(
+            uid, name, 0, type_of, article)
     return query
 
 
@@ -123,6 +128,7 @@ def create_netcard_query(component):
         query = 'INSERT INTO netcard (uid, name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\');'.format(
             uid, name, vendor_code)
     return query
+
 
 def create_fc_adapter_query(component):
     uid = component['UID']
@@ -158,13 +164,16 @@ def create_raid_query(component):
             uid, name, slot_id, int, ext, comp_type, article)
     return query
 
+
 def create_cpu_query(component):
     uid = component['UID']
     name = component['name']
     power = component['power']
     article = component['article']
-    query = 'INSERT INTO cpu (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
+    query = 'INSERT INTO cpu (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+        uid, name, power, article)
     return query
+
 
 def create_ram_query(component):
     uid = component['UID']
@@ -173,7 +182,8 @@ def create_ram_query(component):
     clock = component['clock']
     amount = component['amount']
     article = component['article']
-    query = 'INSERT INTO ram (uid, name, power, clock, amount, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(uid, name, power, clock, amount, article)
+    query = 'INSERT INTO ram (uid, name, power, clock, amount, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, {}, \'{}\');'.format(
+        uid, name, power, clock, amount, article)
     return query
 
 
@@ -187,8 +197,10 @@ def create_drive_query(component):
     slot_id = component['slot_id']
     size = component['size']
     article = component['article']
-    query = 'INSERT INTO drives (uid, name, size, power, type_id, group_id, slot_id, capacity, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', {}, {}, {}, {}, {}, \'{}\');'.format(uid, name, size, power, type_id, group_id, slot_id, capacity, article)
+    query = 'INSERT INTO drives (uid, name, size, power, type_id, group_id, slot_id, capacity, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', {}, {}, {}, {}, {}, \'{}\');'.format(
+        uid, name, size, power, type_id, group_id, slot_id, capacity, article)
     return query
+
 
 def create_gpu_query(component):
     uid = component['UID']
@@ -196,8 +208,10 @@ def create_gpu_query(component):
     power = component['power']
     slot_id = component['slot_id']
     article = component['article']
-    query = 'INSERT INTO gpu (uid, name, power, slot_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, \'{}\');'.format(uid, name, power, slot_id, article)
+    query = 'INSERT INTO gpu (uid, name, power, slot_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, \'{}\');'.format(
+        uid, name, power, slot_id, article)
     return query
+
 
 def create_nic_query(component):
     uid = component['UID']
@@ -206,9 +220,11 @@ def create_nic_query(component):
     slot_id = component['slot_id']
     article = component['article']
     if slot_id != 0:
-        query = 'INSERT INTO nic (uid, name, power, slot_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, \'{}\');'.format(uid, name, power, slot_id, article)
+        query = 'INSERT INTO nic (uid, name, power, slot_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {}, \'{}\');'.format(
+            uid, name, power, slot_id, article)
     else:
-        query = 'INSERT INTO nic (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
+        query = 'INSERT INTO nic (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+            uid, name, power, article)
     return query
 
 
@@ -217,7 +233,8 @@ def create_wfa_query(component):
     name = component['name']
     power = component['power']
     article = component['article']
-    query = 'INSERT INTO wifi_adapter (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
+    query = 'INSERT INTO wifi_adapter (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+        uid, name, power, article)
     return query
 
 
@@ -229,9 +246,11 @@ def create_cables_query(component):
     article = component['article']
     table = component['table']
     if table == 'cables':
-        query = 'INSERT INTO {} (uid, name, type_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {});'.format(table, uid, name, type_id, article)
+        query = 'INSERT INTO {} (uid, name, type_id, vendor_code) VALUES (\'{}\', \'{}\', {}, {});'.format(
+            table, uid, name, type_id, article)
     else:
-        query = 'INSERT INTO {} (uid, name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\');'.format(table, uid, name, article)
+        query = 'INSERT INTO {} (uid, name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\');'.format(
+            table, uid, name, article)
     return query
 
 
@@ -240,7 +259,8 @@ def create_mobile_rack_query(component):
     name = component['name']
     power = component['power']
     article = component['article']
-    query = 'INSERT INTO mobile_rack (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
+    query = 'INSERT INTO mobile_rack (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+        uid, name, power, article)
     return query
 
 
@@ -248,7 +268,8 @@ def create_barebone_laptop_query(component):
     uid = component['UID']
     name = component['name']
     vendor = component['article']
-    query = 'INSERT INTO barebone_laptop (uid, name, vendor_code) VALUES (\'{}\', \'{}\', {});'.format(uid, name, vendor)
+    query = 'INSERT INTO barebone_laptop (uid, name, vendor_code) VALUES (\'{}\', \'{}\', {});'.format(
+        uid, name, vendor)
     return query
 
 
@@ -257,7 +278,8 @@ def create_optical_drive_query(component):
     name = component['name']
     power = component['power']
     article = component['article']
-    query = 'INSERT INTO optical_drive (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, power, article)
+    query = 'INSERT INTO optical_drive (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+        uid, name, power, article)
     return query
 
 
@@ -267,7 +289,8 @@ def create_peripherals_query(component):
     power = component['power']
     table = component['table']
     article = component['article']
-    query = 'INSERT INTO {} (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(table, uid, name, power, article)
+    query = 'INSERT INTO {} (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+        table, uid, name, power, article)
     return query
 
 
@@ -276,17 +299,21 @@ def create_psu_query(component, fake=False):
     name = component['name']
     power = component['power']
     article = component['article']
-    query = 'INSERT INTO psu (uid, name, fake, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(uid, name, fake, article)
+    query = 'INSERT INTO psu (uid, name, fake, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+        uid, name, fake, article)
     return query
+
 
 def create_case_query(component):
     uid = component['UID']
     name = component['name']
     article = component['article']
-    query = 'INSERT INTO public."case" (uid, name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\');'.format(uid, name, article)
+    query = 'INSERT INTO public."case" (uid, name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\');'.format(
+        uid, name, article)
     if component['psu_id'] != 1:
         psu_id = component['psu_id']
-        query = 'INSERT INTO public."case" (uid, name, psu_id, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', \'{}\');'.format(uid, name, psu_id, article)
+        query = 'INSERT INTO public."case" (uid, name, psu_id, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', \'{}\');'.format(
+            uid, name, psu_id, article)
         query_psu = create_psu_query(component, fake=True)
         send_sql_query(query_psu)
     return query
@@ -298,17 +325,23 @@ def create_server_software_query(component):
     article = component['article']
     try:
         soft_type = component['soft_type']
-        query = 'INSERT INTO server_software (uid, name, type, full_name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', \'{}\', \'{}\');'.format(uid, name, soft_type, name, article)
+        query = 'INSERT INTO server_software (uid, name, type, full_name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', \'{}\', \'{}\');'.format(
+            uid, name, soft_type, name, article)
         return query
     except KeyError:
-        query = 'INSERT INTO server_software (uid, name, full_name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', \'{}\');'.format(uid, name, name, article)
+        query = 'INSERT INTO server_software (uid, name, full_name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\', \'{}\');'.format(
+            uid, name, name, article)
         return query
+
 
 def add_commodity_to_db(component):
     for plat in component['valid_platform']:
-        create_component_platform_commodity_query(plat, component['UID'], component['table'])
+        create_component_platform_commodity_query(
+            plat, component['UID'], component['table'])
         if component['type'] == 'CAS' and component['power'] is not None:
-            create_component_platform_commodity_query(plat, component['UID'], 'psu')
+            create_component_platform_commodity_query(
+                plat, component['UID'], 'case')
+
 
 def get_plat_id(name):
     plat_id_query = 'SELECT id FROM platform WHERE name = \'{}\';'.format(name)
@@ -317,14 +350,17 @@ def get_plat_id(name):
         return res
     return res[0]
 
+
 def create_component_platform_commodity_query(plat, uid_cpu, table):
     plat_id = get_plat_id(plat)
     table = table.replace('public.', '').replace('"', '')
+    # print(table)
     if not plat_id:
         return None
     if not check_component_platform_commodity(plat_id, uid_cpu, table):
         res_query = 'INSERT INTO platform_{} (platform_id, {}_uid) VALUES (\'{}\',\'{}\')'.format(table, table,
                                                                                                   plat_id, uid_cpu)
+        # print(res_query)
         if table == 'jbod':
             res_query = 'INSERT INTO platform_{} (platform_id, {}_uid) VALUES (\'{}\',\'{}\')'.format('backplane',
                                                                                                       table, plat_id,
@@ -344,10 +380,11 @@ def check_component_platform_commodity(plat_id, uid_com, table):
     # Создание объекта cursor
     cursor = db.cursor()
     table = table.replace('public.', '').replace('"', '')
-    sql = "SELECT * FROM platform_{} WHERE {}_uid = \'{}\' AND platform_id = \'{}\';".format(table, table, uid_com, plat_id)
+    sql = "SELECT * FROM platform_{} WHERE {}_uid = \'{}\' AND platform_id = \'{}\';".format(
+        table, table, uid_com, plat_id)
     if table == 'jbod':
         sql = "SELECT * FROM platform_{} WHERE {}_uid = \'{}\' AND platform_id = \'{}\';".format('backplane', table, uid_com,
-                                                                                                plat_id)
+                                                                                                 plat_id)
     cursor.execute(sql)
     row = cursor.fetchone()
     db.close()
@@ -359,15 +396,18 @@ def create_cost_query(component):
     cost = component['cost']
     gpl = component['gpl']
     table = component['table']
-    query = "UPDATE {} SET cost = {}, gpl = {} WHERE UID = '{}'".format(table, cost, gpl, uid)
+    query = "UPDATE {} SET cost = {}, gpl = {} WHERE UID = '{}'".format(
+        table, cost, gpl, uid)
     return query
 
 
 def remove_commodity(plat, uid_com, table):
     plat_id = get_plat_id(plat)
-    query = "DELETE FROM platform_{} WHERE {}_uid = '{}' AND platform_id = '{}';".format(table, table, uid_com, plat_id)
+    query = "DELETE FROM platform_{} WHERE {}_uid = '{}' AND platform_id = '{}';".format(
+        table, table, uid_com, plat_id)
     if table == 'jbod':
-        "DELETE FROM platform_{} WHERE {}_uid = '{}' AND platform_id = '{}';".format('backplane', table, uid_com, plat_id)
+        "DELETE FROM platform_{} WHERE {}_uid = '{}' AND platform_id = '{}';".format(
+            'backplane', table, uid_com, plat_id)
 
     send_sql_query(query)
 

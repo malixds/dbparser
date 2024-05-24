@@ -53,7 +53,7 @@ def parse_pc_validation():
 
 def parse_server_validation():
     print('Парсинг компонентов серверных:')
-    wb = pd.read_excel("C:\\Users\\timan\\OneDrive\\Рабочий стол\\Работа\\Аквариус\\Справочник валидированной номенклатуры новый формат.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ')
+    wb = pd.read_excel("/home/malixds/Загрузки/valid.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ')
     wb = wb[~wb['UID'].isnull()]
     for index, row in wb.iterrows():
         if row['Наименование в шаблоне'] == '':
@@ -424,28 +424,29 @@ def create_commodity(component, row, axe):
     valid_plats = []
     for col in list(row.columns)[4:]:
         val = row.loc[axe-1, '{0}'.format(col)]
-        if val > 0 and col != 'Потребляемая мощность, Вт':
-            if col == 'T50 D204CF':
-                col1 = col + '-f'
-                col2 = col + '-b'
-                valid_plats.append(col1)
-                valid_plats.append(col2)
-                continue
-            if 'T40' in col:
-                col1 = col + '-V'
-                col2 = col + '-B'
-                valid_plats.append(col1)
-                valid_plats.append(col2)
-                continue
-            if 'P30 K43 USFF1' == col:
-                col1 = 'P30 K43 USFF1'
-                col2 = 'P30 K43 USFF1 noLVDS'
-                valid_plats.append(col1)
-                valid_plats.append(col2)
-                continue
-            valid_plats.append(col)
-        elif val == 0 and sql_caller.check_component_platform_commodity(sql_caller.get_plat_id(col), component['UID'], component['table']):
-            sql_caller.remove_commodity(col, component['UID'], component['table'])
+        if type(val) != str:
+            if val > 0 and col != 'Потребляемая мощность, Вт':
+                if col == 'T50 D204CF':
+                    col1 = col + '-f'
+                    col2 = col + '-b'
+                    valid_plats.append(col1)
+                    valid_plats.append(col2)
+                    continue
+                if 'T40' in col:
+                    col1 = col + '-V'
+                    col2 = col + '-B'
+                    valid_plats.append(col1)
+                    valid_plats.append(col2)
+                    continue
+                if 'P30 K43 USFF1' == col:
+                    col1 = 'P30 K43 USFF1'
+                    col2 = 'P30 K43 USFF1 noLVDS'
+                    valid_plats.append(col1)
+                    valid_plats.append(col2)
+                    continue
+                valid_plats.append(col)
+            elif val == 0 and sql_caller.check_component_platform_commodity(sql_caller.get_plat_id(col), component['UID'], component['table']):
+                sql_caller.remove_commodity(col, component['UID'], component['table'])
     component['valid_platform'] = valid_plats
     return component
 
