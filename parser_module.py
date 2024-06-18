@@ -22,7 +22,8 @@ def parse_pc_validation():
     print('Парсинг компонентов пользовательских устройств:')
     all_components = int(wb.shape[0])
     added_components, parsed_components, updated_components = 0, 0, 0
-    for i in tqdm(range(1, wb.shape[0])):
+    # for i in tqdm(range(1, wb.shape[0])):
+    for i in tqdm(range(50, 150)):
 
         row = wb.iloc[i-1:i]
         add_to_all_components(row, 'PC')
@@ -53,24 +54,37 @@ def parse_pc_validation():
 
 def parse_server_validation():
     print('Парсинг компонентов серверных:')
-    wb = pd.read_excel("/home/malixds/Загрузки/valid.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ')
+    wb = pd.read_excel("/home/malixds/Загрузки/valid.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ') # смотрим файл с валидацией
+    #удаляем пустые колонки где uid null
     wb = wb[~wb['UID'].isnull()]
+
+    # Замена пустых значений в колонке 'Наименование в шаблоне' значениями из 'Рабочее наименование ERP'
     for index, row in wb.iterrows():
         if row['Наименование в шаблоне'] == '':
             row['Наименование в шаблоне'] = row['Рабочее наименование ERP']
 
+
+    # Удаление строк с пустыми значениями в колонке 'Наименование в шаблоне'
     wb = wb[~wb['Наименование в шаблоне'].isnull()]
+    # Заполнение всех оставшихся пустых ячеек нулями
     wb = wb.fillna(0)
-    wb = wb.drop_duplicates(subset=['UID'])
+    # Удаление дубликатов по колонке 'UID'
+    # wb = wb.drop_duplicates(subset=['UID'])
+    # Сброс индексов DataFrame и удаление старого индекса
     wb = wb.reset_index()
     wb = wb.drop(columns='index')
+
+    # Удаление колонки 'Рабочее наименование ERP' как ненужной
     wb = wb.drop(columns='Рабочее наименование ERP')
 
     all_components = int(wb.shape[0])
     added_components, parsed_components, updated_components = 0, 0, 0
     for i in tqdm(range(1, wb.shape[0])):
+    # for i in tqdm(range(50, 150)):
 
+        # текущая строка
         row = wb.iloc[i - 1:i]
+        print('тек строка', row)
         add_to_all_components(row, 'Server')
         component = create_component(row, 'Server')
 
@@ -81,13 +95,17 @@ def parse_server_validation():
         parsed_components += 1
 
         query = sql_caller.create_component_query(component)
-        if not sql_caller.check_availability(component['UID'], component['table']):
-            sql_caller.send_sql_query(query)
-            added_components += 1
-        else:
+        if not sql_caller.check_availability(component['UID'], component['table'], component['article']): # если такого uid нет, то создаем зпись
+            result_of_sql_query = sql_caller.send_sql_query(query)
+            print('res uf sql qry', result_of_sql_query)
+            if result_of_sql_query:
+                added_components += 1
+        else: # если такой есть мы обновляем данные
             query = sql_caller.refactor_to_update_query(query)
-            sql_caller.send_sql_query(query)
-            updated_components += 1
+            # print('component is updating', component)
+            result_of_sql_query = sql_caller.send_sql_query(query)
+            if result_of_sql_query:
+                updated_components += 1
 
         if component['table'] != 'transceivers':
             component = create_commodity(component, row, i)
@@ -103,6 +121,7 @@ def add_to_all_components(component, table):
     res['name'] = get_name(component)
     res['power'] = get_power(component, table)
     res['article'] = str(get_article(component, table)).replace('.0', '')
+    print('ARTICLE! TYPE!, UID!', res['article'], res['type'], res['UID'])
     query = sql_caller.create_all_query(res)
     if not sql_caller.check_availability_all_components(res['article']):
         sql_caller.send_sql_query(query)
@@ -119,6 +138,7 @@ def create_component(component, table):
     else:
         res['power'] = 0
     res['article'] = str(get_article(component, table)).replace('.0', '')
+    print('Компонент',res)
 
     if res['type'] == 'CPU':
         res['table'] = 'cpu'
@@ -202,6 +222,7 @@ def get_uid(component):
     return component.iloc[0, 0]
 def get_uid_type(component):
     type = get_component_type(component.iloc[0, 0])
+    print('TYPE!', type)
     return type
 
 def get_component_type(uid):
@@ -220,6 +241,7 @@ def get_power(component, table):
 
 def get_article(component, table):
     if table == 'Server':
+        print('ARTICL??', component.iloc[0, 2])
         return component.iloc[0, 2]
     elif table == 'PC':
         return component.iloc[0, 3]

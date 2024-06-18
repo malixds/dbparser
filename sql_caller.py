@@ -1,4 +1,5 @@
 import psycopg2
+import traceback
 
 
 def create_connection():
@@ -23,8 +24,12 @@ def send_sql_query(query):
     # Отправка SQL-запроса
     try:
         cursor.execute(query)
-    except:
+    except Exception as e:
+        # Вывод информации об исключении
+        print("Произошла ошибка при выполнении SQL-запроса:", e)
+        traceback.print_exc()  # Выводит полный стек вызовов, что помогает в отладке
         return False
+
     res = True
     if 'SELECT' in query:
         res = cursor.fetchone()
@@ -32,18 +37,27 @@ def send_sql_query(query):
 
     # Закрытие соединения с базой данных
     db.close()
+
     return res
 
 
-def check_availability(uid, table):
+def check_availability(uid, table, article):
     db = create_connection()
 
     table = table.replace('public.', '')
     # Создание объекта cursor
     cursor = db.cursor()
-    sql = "SELECT * FROM {} WHERE uid = '{}'".format(table, uid)
+    if table != 'jbod':
+        if article.isdigit():
+            sql = "SELECT * FROM {} WHERE uid = '{}' and vendor_code = '{}'".format(table, uid, article)
+        else:
+            return True
+    else:
+        sql = "SELECT * FROM {} WHERE uid = '{}'".format(table, uid)
+    print('sql на проверку', sql)
     cursor.execute(sql)
     row = cursor.fetchone()
+    print('row проверка на наличие компонента', row)
     db.close()
     return row is not None
 
@@ -53,6 +67,7 @@ def check_availability_all_components(article):
 
     # Создание объекта cursor
     cursor = db.cursor()
+    # все компоненты из all_components где прееданный артикл
     sql = "SELECT * FROM all_components WHERE article = '{}'".format(article)
     cursor.execute(sql)
     row = cursor.fetchone()
