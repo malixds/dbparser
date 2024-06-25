@@ -7,9 +7,9 @@ def create_connection():
     connection = psycopg2.connect(
         host="localhost",
         port='5432',
-        database="tima_db",
-        user="postgres",
-        password="1234"
+        database="aqua_old",
+        user="malixds",
+        password=""
     )
     return connection
 
@@ -304,7 +304,11 @@ def create_peripherals_query(component):
     power = component['power']
     table = component['table']
     article = component['article']
-    query = 'INSERT INTO {} (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
+    if table == "jbod" or table == 'transceivers':
+        query = 'INSERT INTO {} (uid, name, vendor_code) VALUES (\'{}\', \'{}\', \'{}\');'.format(
+            table, uid, name, power, article)
+    else:
+        query = 'INSERT INTO {} (uid, name, power, vendor_code) VALUES (\'{}\', \'{}\', {}, \'{}\');'.format(
         table, uid, name, power, article)
     return query
 

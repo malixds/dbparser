@@ -54,7 +54,7 @@ def parse_pc_validation():
 
 def parse_server_validation():
     print('Парсинг компонентов серверных:')
-    wb = pd.read_excel("/home/malixds/Загрузки/valid.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ') # смотрим файл с валидацией
+    wb = pd.read_excel("/Users/malixds/dev/work/dbparser/valid.xlsx", sheet_name='Справочник', usecols='A,C,F,G,H:AH,AJ') # смотрим файл с валидацией
     #удаляем пустые колонки где uid null
     wb = wb[~wb['UID'].isnull()]
 
